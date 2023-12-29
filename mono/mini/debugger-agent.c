@@ -9418,6 +9418,21 @@ leave:
 #endif
 }
 
+static const char*
+winepath (char* path)
+{
+	char* test = path;
+	if (strncmp(test, "Z:", 2) == 0)
+	{
+		memmove(test, &test[2], strlen(test) - 2 + 1);
+		for (size_t i = 0; i < strlen(test); i++)
+		{
+			if (test[i] == '\\')
+				test[i] = '/';
+		}
+	}
+	return test;
+}
 
 static ErrorCode
 assembly_commands (int command, guint8 *p, guint8 *end, Buffer *buf)
@@ -9432,7 +9447,7 @@ assembly_commands (int command, guint8 *p, guint8 *end, Buffer *buf)
 
 	switch (command) {
 	case CMD_ASSEMBLY_GET_LOCATION: {
-		buffer_add_string (buf, mono_image_get_filename (ass->image));
+		buffer_add_string (buf, winepath(mono_image_get_filename (ass->image)));
 		break;
 	}
 	case CMD_ASSEMBLY_GET_ENTRY_POINT: {
@@ -9551,7 +9566,7 @@ module_commands (int command, guint8 *p, guint8 *end, Buffer *buf)
 		basename = g_path_get_basename (image->name);
 		buffer_add_string (buf, basename); // name
 		buffer_add_string (buf, VM_IMAGE_GET_MODULE_NAME(image)); // scopename
-		buffer_add_string (buf, image->name); // fqname
+		buffer_add_string (buf, winepath(image->name)); // fqname
 		buffer_add_string (buf, mono_image_get_guid (image)); // guid
 		buffer_add_assemblyid (buf, domain, image->assembly); // assembly
 		g_free (basename);
